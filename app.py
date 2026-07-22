@@ -14,70 +14,62 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🎨 2. تطبيق التصميم المخصص (خلفية بيضاء ناصعة في Light Mode)
+# 🎨 2. تطبيق التصميم المربوط بخيارات Streamlit (Light & Dark)
 st.markdown("""
     <style>
-        /* 1. تعريف الألوان للثيم الفاتح (Light Mode) - خلفية بيضاء ناصعة */
-        :root {
-            --bg-color: #ffffff;
-            --card-bg: #ffffff;
-            --input-bg: #f8fafc;
-            --text-color: #0f172a;
-            --subtext-color: #475569;
-            --border-color: #e2e8f0;
-            --primary-blue: #0d6efd;
-            --primary-blue-hover: #0b5ed7;
-            --shadow-color: rgba(0, 0, 0, 0.06);
+        /* 1. الثيم الفاتح (Light Mode) */
+        .stApp, [data-theme="light"] .stApp {
+            background-color: #ffffff !important;
         }
 
-        /* 2. تعديل المتغيرات تلقائياً عند تحويل النظام للثيم الداكن (Dark Mode) */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #0e1117;
-                --card-bg: #1e293b;
-                --input-bg: #0f172a;
-                --text-color: #f8fafc;
-                --subtext-color: #94a3b8;
-                --border-color: #334155;
-                --primary-blue: #3b82f6;
-                --primary-blue-hover: #2563eb;
-                --shadow-color: rgba(0, 0, 0, 0.4);
-            }
-        }
-
-        /* 3. تطبيق الألوان الديناميكية على خلفية الصفحة والهيدر */
-        .stApp, header[data-testid="stHeader"] {
-            background-color: var(--bg-color) !important;
-        }
-
-        /* العنوان الرئيسي */
-        h1 {
-            color: var(--primary-blue) !important;
-            font-weight: 800 !important;
-        }
-
-        /* كارت الإدخال الكبير */
+        [data-theme="light"] div[data-testid="stForm"],
         div[data-testid="stForm"] {
-            background-color: var(--card-bg) !important;
+            background-color: #ffffff !important;
             padding: 30px !important;
             border-radius: 16px !important;
-            border: 2px solid var(--border-color) !important;
-            box-shadow: 0px 8px 20px var(--shadow-color) !important;
+            border: 2px solid #e2e8f0 !important;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.06) !important;
         }
 
-        /* بوكس الكتابة والخط الداخلي */
+        [data-theme="light"] div[data-baseweb="input"] input,
         div[data-baseweb="input"] input {
             font-size: 1.2rem !important;
             padding: 14px 18px !important;
-            background-color: var(--input-bg) !important;
-            color: var(--text-color) !important;
-            border: 2px solid var(--primary-blue) !important;
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border: 2px solid #0d6efd !important;
             border-radius: 10px !important;
         }
 
-        /* زر السؤال الأزرق */
+        [data-theme="light"] h1, h1 {
+            color: #0d6efd !important;
+            font-weight: 800 !important;
+        }
+
+        /* 2. الثيم الداكن (Dark Mode) - عند التبديل إلى Dark في القائمة */
+        [data-theme="dark"] .stApp {
+            background-color: #0e1117 !important;
+        }
+
+        [data-theme="dark"] div[data-testid="stForm"] {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        [data-theme="dark"] div[data-baseweb="input"] input {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border-color: #3b82f6 !important;
+        }
+
+        [data-theme="dark"] h1 {
+            color: #3b82f6 !important;
+        }
+
+        /* 3. زر السؤال الأزرق (مشترك للثيمين) */
         div[data-testid="stForm"] button {
-            background-color: var(--primary-blue) !important;
+            background-color: #0d6efd !important;
             color: #ffffff !important;
             font-size: 1.25rem !important;
             font-weight: bold !important;
@@ -88,7 +80,7 @@ st.markdown("""
         }
 
         div[data-testid="stForm"] button:hover {
-            background-color: var(--primary-blue-hover) !important;
+            background-color: #0b5ed7 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -126,7 +118,7 @@ def main():
     # Header
     st.title("📚 Data Analysis RAG Mentor")
     st.markdown(
-        "<p style='font-size: 1.15rem; color: var(--subtext-color);'>"
+        "<p style='font-size: 1.15rem;'>"
         "Ask any Data Analysis question and receive a structured, "
         "mentorship-style answer drawn directly from your uploaded reference books."
         "</p>",
@@ -185,7 +177,7 @@ def main():
                 source_docs = result.get("context", [])
 
                 st.divider()
-                st.markdown("<h3 style='color: var(--primary-blue);'>🤖 AI Mentor Response</h3>", unsafe_allow_html=True)
+                st.markdown("<h3>🤖 AI Mentor Response</h3>", unsafe_allow_html=True)
                 st.markdown(answer)
 
                 sources = format_sources(source_docs, icon=True)
