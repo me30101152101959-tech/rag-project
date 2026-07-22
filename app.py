@@ -9,7 +9,6 @@ import streamlit as st
 # 1. إعدادات الصفحة الأساسية (يجب أن تكون في بداية الملف دائماً)
 st.set_page_config(
     page_title="📚 Data Analysis RAG Mentor",
-    page_icon="",
     layout="centered",
     initial_sidebar_state="expanded"
 )
