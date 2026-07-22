@@ -8,26 +8,27 @@ import streamlit as st
 
 # 1. إعدادات الصفحة الأساسية
 st.set_page_config(
-    page_title=" Data Analysis RAG Mentor",
+    page_title="Data Analysis RAG Mentor",
     page_icon="📚",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# 🎨 2. تطبيق التصميم المخصص لدعم الثيم الفاتح والداكن (Light & Dark Mode)
+# 🎨 2. تطبيق التصميم المخصص (خلفية بيضاء ناصعة في Light Mode)
 st.markdown("""
     <style>
-        /* 1. تعريف الألوان للثيم الفاتح (Light Mode) */
+        /* 1. تعريف الألوان للثيم الفاتح (Light Mode) - خلفية بيضاء ناصعة */
         :root {
             --bg-color: #ffffff;
             --card-bg: #ffffff;
-            --input-bg: #ffffff;
+            --input-bg: #f8fafc;
             --text-color: #0f172a;
             --subtext-color: #475569;
-            --border-color: #ffffff;
+            --border-color: #e2e8f0;
             --primary-blue: #0d6efd;
             --primary-blue-hover: #0b5ed7;
-            --shadow-color: rgba(0, 0, 0, 0.1);}
+            --shadow-color: rgba(0, 0, 0, 0.06);
+        }
 
         /* 2. تعديل المتغيرات تلقائياً عند تحويل النظام للثيم الداكن (Dark Mode) */
         @media (prefers-color-scheme: dark) {
@@ -44,8 +45,8 @@ st.markdown("""
             }
         }
 
-        /* 3. تطبيق الألوان الديناميكية على العناصر */
-        .stApp {
+        /* 3. تطبيق الألوان الديناميكية على خلفية الصفحة والهيدر */
+        .stApp, header[data-testid="stHeader"] {
             background-color: var(--bg-color) !important;
         }
 
@@ -61,7 +62,7 @@ st.markdown("""
             padding: 30px !important;
             border-radius: 16px !important;
             border: 2px solid var(--border-color) !important;
-            box-shadow: 0px 10px 25px var(--shadow-color) !important;
+            box-shadow: 0px 8px 20px var(--shadow-color) !important;
         }
 
         /* بوكس الكتابة والخط الداخلي */
