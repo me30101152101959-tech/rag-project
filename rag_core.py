@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+from huggingface_hub import snapshot_download
 from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -35,6 +36,7 @@ COLLECTION_NAME = "data_analysis_rag"
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+HF_REPO_ID = "mostafaeltaweel/data-analysis-chromadb"
 
 
 # ─────────────────────────────────────────────
@@ -120,16 +122,28 @@ def verify_environment(exit_on_fail: bool = True) -> str:
 
 
 def verify_chroma_exists(exit_on_fail: bool = True) -> None:
-    """Confirm the ChromaDB directory exists before loading."""
+    """Confirm the ChromaDB directory exists before loading.
+    If missing, automatically downloads it from Hugging Face Datasets.
+    """
     if not os.path.exists(CHROMA_DIR):
-        msg = (
-            f"ChromaDB not found at '{CHROMA_DIR}'.\n"
-            "  → Run: python ingest.py"
-        )
-        if exit_on_fail:
-            print(f"❌ ERROR: {msg}")
-            sys.exit(1)
-        raise RuntimeError(msg)
+        print(f"🌐 ChromaDB not found at '{CHROMA_DIR}'. Downloading from Hugging Face ({HF_REPO_ID})...")
+        try:
+            snapshot_download(
+                repo_id=HF_REPO_ID,
+                repo_type="dataset",
+                local_dir=CHROMA_DIR,
+                ignore_patterns=[".git*"]
+            )
+            print("✅ ChromaDB downloaded successfully from Hugging Face!")
+        except Exception as e:
+            msg = (
+                f"Failed to download ChromaDB from Hugging Face ({HF_REPO_ID}): {str(e)}\n"
+                "  → Ensure internet connectivity or run 'python upload_to_hf.py' first."
+            )
+            if exit_on_fail:
+                print(f"❌ ERROR: {msg}")
+                sys.exit(1)
+            raise RuntimeError(msg)
 
 
 # ─────────────────────────────────────────────
@@ -236,7 +250,7 @@ def format_sources(source_documents: list, icon: bool = True) -> list[str]:
 
     Args:
         source_documents: List of LangChain Document objects (from result["context"]).
-        icon:              Prepend a book emoji for CLI/UI display.
+        icon:             Prepend a book emoji for CLI/UI display.
 
     Returns:
         Deduplicated list of citation strings like "📖 book.pdf — Page 42".
