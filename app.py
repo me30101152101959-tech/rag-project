@@ -19,12 +19,12 @@ st.markdown("""
     <style>
         /* 1. تعريف الألوان للثيم الفاتح (Light Mode) */
         :root {
-            --bg-color: #f8f9fa;
+            --bg-color: #ffffff;
             --card-bg: #ffffff;
-            --input-bg: #f8fafc;
+            --input-bg: #ffffff;
             --text-color: #0f172a;
             --subtext-color: #475569;
-            --border-color: #e2e8f0;
+            --border-color: #ffffff;
             --primary-blue: #0d6efd;
             --primary-blue-hover: #0b5ed7;
             --shadow-color: rgba(13, 110, 253, 0.08);
