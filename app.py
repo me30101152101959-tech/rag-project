@@ -73,20 +73,12 @@ def main():
 
         # 2. دليل قاعدة المعرفة (قابلة للطي لتقليل الزحام)
         with st.expander("📖 Knowledge Base Guide", expanded=False):
-            st.markdown(
-                "To add or update reference books:\n"
-                "1. Add PDFs into `./books/`\n"
-                "2. Run the ingestion command:"
-            )
+
             st.code("python ingest.py", language="bash")
 
         # 3. إعدادات المفتاح
         with st.expander("🔑 API Key Setup", expanded=False):
-            st.markdown("**Local Development (`.env`):**")
-            st.code("GROQ_API_KEY=gsk_your_key_here", language="env")
-            st.markdown("**Streamlit Cloud (Secrets):**")
-            st.code('GROQ_API_KEY = "gsk_your_key_here"', language="toml")
-    # Load RAG chain (cached — runs only once per session)
+       # Load RAG chain (cached — runs only once per session)
     chain = load_cached_rag_chain()
 
     # Question input
