@@ -9,7 +9,7 @@ import streamlit as st
 # 1. إعدادات الصفحة الأساسية (يجب أن تكون في بداية الملف دائماً)
 st.set_page_config(
     page_title="📚 Data Analysis RAG Mentor",
-    page_icon="📚",
+    page_icon="",
     layout="centered",
     initial_sidebar_state="expanded"
 )
@@ -17,10 +17,6 @@ st.set_page_config(
 # 🎨 2. تطبيق التصميم (خلفية فاتحة، بوكس كبير، أزرق، خطوط واضحة)
 st.markdown("""
     <style>
-        /* خلفية التطبيق فاتحة مريحة */
-        .stApp {
-            background-color: #f8f9fa !important;
-        }
 
         /* العنوان الرئيسي بأزرق مميز */
         h1 {
