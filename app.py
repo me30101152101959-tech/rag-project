@@ -6,36 +6,38 @@ Powered by Groq LLM + HuggingFace local embeddings + ChromaDB.
 import os
 import streamlit as st
 
-# 1. إعدادات الصفحة الأساسية (يجب أن تكون في بداية الملف دائماً)
+# 1. إعدادات الصفحة الأساسية
 st.set_page_config(
-    page_title="📚 Data Analysis RAG Mentor",
+    page_title=" Data Analysis RAG Mentor",
+    page_icon="📚",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# 🎨 2. تطبيق التصميم (خلفية فاتحة، بوكس كبير، أزرق، خطوط واضحة)
+# 🎨 2. تطبيق التصميم المخصص لدعم الثيم الفاتح والداكن (Light & Dark Mode)
 st.markdown("""
-   st.markdown("""
     <style>
-        /* 1. تعريف الألوان للثيم الفاتح (Light Mode) بشكل افتراضي */
+        /* 1. تعريف الألوان للثيم الفاتح (Light Mode) */
         :root {
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --input-bg: #f8fafc;
             --text-color: #0f172a;
+            --subtext-color: #475569;
             --border-color: #e2e8f0;
             --primary-blue: #0d6efd;
             --primary-blue-hover: #0b5ed7;
             --shadow-color: rgba(13, 110, 253, 0.08);
         }
 
-        /* 2. تعديل المتغيرات تلقائياً عند تحويل النظام إلى الثيم الداكن (Dark Mode) */
+        /* 2. تعديل المتغيرات تلقائياً عند تحويل النظام للثيم الداكن (Dark Mode) */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #0e1117;
                 --card-bg: #1e293b;
                 --input-bg: #0f172a;
                 --text-color: #f8fafc;
+                --subtext-color: #94a3b8;
                 --border-color: #334155;
                 --primary-blue: #3b82f6;
                 --primary-blue-hover: #2563eb;
@@ -43,7 +45,7 @@ st.markdown("""
             }
         }
 
-        /* 3. تطبيق الألوان الديناميكية على عناصر الصفحة */
+        /* 3. تطبيق الألوان الديناميكية على العناصر */
         .stApp {
             background-color: var(--bg-color) !important;
         }
@@ -54,7 +56,7 @@ st.markdown("""
             font-weight: 800 !important;
         }
 
-        /* كارت الإدخال (الكبير والبارز) */
+        /* كارت الإدخال الكبير */
         div[data-testid="stForm"] {
             background-color: var(--card-bg) !important;
             padding: 30px !important;
@@ -73,7 +75,7 @@ st.markdown("""
             border-radius: 10px !important;
         }
 
-        /* زر السؤال الأزرق الكبير */
+        /* زر السؤال الأزرق */
         div[data-testid="stForm"] button {
             background-color: var(--primary-blue) !important;
             color: #ffffff !important;
@@ -91,7 +93,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# استيراد الوظائف من rag_core بعد ضبط الواجهة
+# 3. استيراد الوظائف من rag_core
 try:
     from rag_core import (
         build_rag_chain,
@@ -124,7 +126,7 @@ def main():
     # Header
     st.title("📚 Data Analysis RAG Mentor")
     st.markdown(
-        "<p style='font-size: 1.15rem; color: #475569;'>"
+        "<p style='font-size: 1.15rem; color: var(--subtext-color);'>"
         "Ask any Data Analysis question and receive a structured, "
         "mentorship-style answer drawn directly from your uploaded reference books."
         "</p>",
@@ -152,7 +154,7 @@ def main():
 
     st.divider()
 
-    # تحميل النموذج مع التعامل مع أي خطأ قد يظهر
+    # تحميل النموذج
     try:
         chain = load_cached_rag_chain()
     except Exception as e:
@@ -174,7 +176,7 @@ def main():
             use_container_width=True
         )
 
-    # الإجابة معالجة
+    # معالجة الإجابة
     if ask_button and question.strip():
         with st.spinner("🧠 Retrieving context and generating response via Groq..."):
             try:
@@ -183,7 +185,7 @@ def main():
                 source_docs = result.get("context", [])
 
                 st.divider()
-                st.markdown("<h3 style='color: #0d6efd;'>🤖 AI Mentor Response</h3>", unsafe_allow_html=True)
+                st.markdown("<h3 style='color: var(--primary-blue);'>🤖 AI Mentor Response</h3>", unsafe_allow_html=True)
                 st.markdown(answer)
 
                 sources = format_sources(source_docs, icon=True)
