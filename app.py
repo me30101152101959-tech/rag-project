@@ -1,17 +1,17 @@
 """
 app.py — Streamlit Web Interface for Data Analysis RAG Mentor
-Powered by OpenRouter LLM + HuggingFace local embeddings + ChromaDB.
-Uses LangChain LCEL (0.3.x+ compatible — no RetrievalQA).
+Powered by Groq LLM + HuggingFace local embeddings + ChromaDB.
+Uses LangChain LCEL (0.3.x+ compatible).
 """
 
 import os
 
 import streamlit as st
-from dotenv import load_dotenv
 
 from rag_core import (
     build_rag_chain,
     format_sources,
+    verify_environment,
     DEFAULT_MODEL,
     EMBEDDING_MODEL
 )
@@ -38,34 +38,12 @@ def load_cached_rag_chain():
     Load and cache the full RAG chain on first run.
     Subsequent user interactions reuse the cached chain — zero re-initialization.
     """
-    # Streamlit Cloud Secrets → fallback to .env for local dev
-    api_key = st.secrets.get("OPENROUTER_API_KEY", None)
-    if not api_key:
-        load_dotenv()
-        api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-
-    if not api_key or api_key.startswith("sk-or-v1-your_openrouter"):
-        st.error(
-            "❌ **OPENROUTER_API_KEY not found.**\n\n"
-            "**Local:** Add `OPENROUTER_API_KEY=sk-or-v1-...` to your `.env` file.\n\n"
-            "**Streamlit Cloud:** Go to App Settings → Secrets → add:\n"
-            "```toml\nOPENROUTER_API_KEY = \"sk-or-v1-...\"\n```"
-        )
-        st.stop()
-
-    if not os.path.exists("./chroma_db"):
-        st.error(
-            "❌ **ChromaDB vector store not found.**\n\n"
-            "Run the following command locally first:\n"
-            "```bash\npython ingest.py\n```\n"
-            "Then commit the `chroma_db/` folder and redeploy."
-        )
-        st.stop()
-
     try:
+        # Verify and retrieve GROQ_API_KEY from .env or st.secrets
+        api_key = verify_environment(exit_on_fail=False)
         return build_rag_chain(api_key=api_key)
     except Exception as e:
-        st.error(f"❌ Failed to initialize RAG chain: {str(e)}")
+        st.error(f"❌ Failed to initialize RAG chain:\n\n{str(e)}")
         st.stop()
 
 
@@ -84,7 +62,7 @@ def main():
     # Sidebar — system info
     with st.sidebar:
         st.header("⚙️ System Info")
-        st.markdown(f"**🤖 LLM Provider:** OpenRouter")
+        st.markdown(f"**🤖 LLM Provider:** Groq")
         st.markdown(f"**🧠 LLM Model:** `{DEFAULT_MODEL}`")
         st.markdown(f"**🤗 Embeddings:** HuggingFace (local)")
         st.markdown(f"**📦 Embed Model:** `{EMBEDDING_MODEL}`")
@@ -98,8 +76,8 @@ def main():
         st.divider()
         st.markdown(
             "🔑 Set your key:\n"
-            "- **Local:** `.env` → `OPENROUTER_API_KEY`\n"
-            "- **Cloud:** Streamlit Secrets"
+            "- **Local:** `.env` → `GROQ_API_KEY`\n"
+            "- **Cloud:** Streamlit Secrets → `GROQ_API_KEY`"
         )
 
     st.divider()
@@ -122,7 +100,7 @@ def main():
 
     # Process and display answer
     if ask_button and question:
-        with st.spinner("🧠 Retrieving context and generating response via OpenRouter..."):
+        with st.spinner("🧠 Retrieving context and generating response via Groq..."):
             try:
                 # LCEL chain: input key is "input", answer is result["answer"]
                 result = chain.invoke({"input": question})
@@ -146,8 +124,8 @@ def main():
                 st.error(f"❌ An error occurred: {str(e)}")
                 st.info(
                     "Possible causes:\n"
-                    "- Invalid or expired **OPENROUTER_API_KEY**\n"
-                    "- OpenRouter rate limit reached (free tier)\n"
+                    "- Invalid or expired **GROQ_API_KEY**\n"
+                    "- Groq API rate limit reached\n"
                     "- No internet connection"
                 )
 
@@ -157,7 +135,7 @@ def main():
     # Footer
     st.divider()
     st.caption(
-        "Built with LangChain 0.3 • OpenRouter • HuggingFace • ChromaDB • Streamlit"
+        "Built with LangChain 0.3 • Groq API • HuggingFace • ChromaDB • Streamlit"
     )
 
 
