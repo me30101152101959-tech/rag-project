@@ -27,8 +27,7 @@ st.markdown("""
             --border-color: #ffffff;
             --primary-blue: #0d6efd;
             --primary-blue-hover: #0b5ed7;
-            --shadow-color: rgba(13, 110, 253, 0.08);
-        }
+            --shadow-color: rgba(0, 0, 0, 0.1);}
 
         /* 2. تعديل المتغيرات تلقائياً عند تحويل النظام للثيم الداكن (Dark Mode) */
         @media (prefers-color-scheme: dark) {
