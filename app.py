@@ -1,121 +1,113 @@
-"""
-app.py — Streamlit Web Interface for Data Analysis RAG Mentor
-Powered by Groq LLM + HuggingFace local embeddings + ChromaDB.
-Uses LangChain LCEL (0.3.x+ compatible).
-"""
-
-import os
-
-import streamlit as st
-
-from rag_core import (
-    build_rag_chain,
-    format_sources,
-    verify_environment,
-    DEFAULT_MODEL,
-    EMBEDDING_MODEL
-)
-
-
 # ─────────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────────
-
-st.set_page_config(
-    page_title="📚 Data Analysis RAG Mentor",
-    page_icon="📚",
-    layout="centered"
-)
-
-
-# ─────────────────────────────────────────────
-# CACHED RESOURCE LOADER
-# ─────────────────────────────────────────────
-
-@st.cache_resource(show_spinner="⏳ Loading AI Mentor (first load only)...")
-def load_cached_rag_chain():
-    """
-    Load and cache the full RAG chain on first run.
-    Subsequent user interactions reuse the cached chain — zero re-initialization.
-    """
-    try:
-        # Verify and retrieve GROQ_API_KEY from .env or st.secrets
-        api_key = verify_environment(exit_on_fail=False)
-        return build_rag_chain(api_key=api_key)
-    except Exception as e:
-        st.error(f"❌ Failed to initialize RAG chain:\n\n{str(e)}")
-        st.stop()
-
-
-# ─────────────────────────────────────────────
-# MAIN APP
+# MAIN APP INTERFACE
 # ─────────────────────────────────────────────
 
 def main():
-    # Header
+    # 🎨 إدخال تنسيقات CSS المخصصة (خلفية فاتحة، خطوط كبيرة، ولون أزرق)
+    st.markdown("""
+        <style>
+            /* 1. خلفية الصفحة فاتحة */
+            .stApp {
+                background-color: #f8f9fa !important;
+            }
+
+            /* 2. العنوان الرئيسي باللون الأزرق وحجم كبير */
+            h1 {
+                color: #0d6efd !important;
+                font-size: 2.8rem !important;
+                font-weight: 800 !important;
+            }
+
+            /* 3. تكبير كارت الإدخال وتحديد خلفيته باللون الأبيض الناصع */
+            div[data-testid="stForm"] {
+                background-color: #ffffff !important;
+                padding: 35px !important;
+                border-radius: 18px !important;
+                border: 2px solid #e3e8ee !important;
+                box-shadow: 0px 8px 20px rgba(13, 110, 253, 0.08) !important;
+            }
+
+            /* 4. تكبير عنوان حقل الإدخال والخط الأزرق */
+            div[data-testid="stForm"] label p {
+                font-size: 1.3rem !important;
+                font-weight: bold !important;
+                color: #0b5ed7 !important;
+            }
+
+            /* 5. تكبير بوكس الإدخال (Input Box) والخط الداخلي */
+            div[data-baseweb="input"] input {
+                font-size: 1.25rem !important;
+                padding: 16px 20px !important;
+                background-color: #f4f7fa !important;
+                color: #0d233a !important;
+                border: 2px solid #0d6efd !important;
+                border-radius: 12px !important;
+            }
+
+            /* 6. تكبير زر الإرسال ولونه الأزرق المميز */
+            div[data-testid="stForm"] button {
+                background-color: #0d6efd !important;
+                color: #ffffff !important;
+                font-size: 1.3rem !important;
+                font-weight: bold !important;
+                padding: 16px !important;
+                border-radius: 12px !important;
+                border: none !important;
+                transition: all 0.3s ease !important;
+            }
+
+            /* تأثير تحويم الماوس على الزر */
+            div[data-testid="stForm"] button:hover {
+                background-color: #0b5ed7 !important;
+                box-shadow: 0px 4px 12px rgba(13, 110, 253, 0.3) !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # 1. العنوان والوصف الرئيسي
     st.title("📚 Data Analysis RAG Mentor")
+    st.caption("✨ Powered by Groq LLM & LangChain LCEL")
+    
     st.markdown(
+        "<p style='font-size: 1.15rem; color: #495057;'>"
         "Ask any Data Analysis question and receive a structured, "
         "mentorship-style answer drawn directly from your uploaded reference books."
+        "</p>", 
+        unsafe_allow_html=True
     )
 
-   # Sidebar — System Info & Setup Guide
-    with st.sidebar:
-        st.title("⚙️ System Architecture")
-        st.caption("Data Analysis RAG Engine Status")
-        
-        # 1. كارت تفاصيل النماذج والمحرك
-        with st.container(border=True):
-            st.subheader("AI Core", divider="blue")
-            st.markdown(f"**Provider:** `Groq` ⚡")            
-            st.subheader("🧠 Vector Engine", divider="green")
-            st.markdown(f"**Embeddings:** `HuggingFace`")
+    st.divider()
 
-        # 2. دليل قاعدة المعرفة (قابلة للطي لتقليل الزحام)
-        with st.expander("📖 Knowledge Base Guide", expanded=False):
-            st.markdown(
-                "To add or update reference books:\n"
-                "1. Add PDFs into `./books/`\n"
-                "2. Run the ingestion command:"
-            )
-            st.code("python ingest.py", language="bash")
-
-        # 3. إعدادات المفتاح
-        with st.expander("🔑 API Key Setup", expanded=False):
-            st.markdown("**Local Development (`.env`):**")
-            st.code("GROQ_API_KEY", language="env")
-            st.markdown("**Streamlit Cloud (Secrets):**")
-            st.code('GROQ_API_KEY', language="toml")
-    # Load RAG chain (cached — runs only once per session)
+    # 2. تحميل الـ Chain
     chain = load_cached_rag_chain()
 
-    # Question input
-    question = st.text_input(
-        "💡 Enter your Data Analysis question:",
-        placeholder="e.g., Explain the difference between INNER JOIN and LEFT JOIN with examples...",
-        key="question_input"
-    )
+    # 3. البوكس الكبير والنموذج
+    with st.form(key="qa_form", clear_on_submit=False):
+        question = st.text_input(
+            "💡 Enter your Data Analysis question:",
+            placeholder="e.g., Explain the difference between INNER JOIN and LEFT JOIN with examples...",
+            key="question_input"
+        )
+        
+        ask_button = st.form_submit_button(
+            "🚀 Ask Question",
+            type="primary",
+            use_container_width=True
+        )
 
-    ask_button = st.button(
-        "🚀 Ask Question",
-        type="primary",
-        use_container_width=True
-    )
-
-    # Process and display answer
-    if ask_button and question:
+    # 4. معالجة السؤال وعرض النتيجة
+    if ask_button and question.strip():
         with st.spinner("🧠 Retrieving context and generating response via Groq..."):
             try:
-                # LCEL chain: input key is "input", answer is result["answer"]
-                result = chain.invoke({"input": question})
+                result = chain.invoke({"input": question.strip()})
                 answer = result.get("answer", "No answer generated.")
                 source_docs = result.get("context", [])
 
                 st.divider()
-                st.markdown("### 🤖 AI Mentor Response")
+                st.markdown("<h3 style='color: #0d6efd;'>🤖 AI Mentor Response</h3>", unsafe_allow_html=True)
                 st.markdown(answer)
 
-                # Source citations
+                # المصادر والمراجع
                 sources = format_sources(source_docs, icon=True)
                 with st.expander("📚 Source Citations", expanded=False):
                     if sources:
@@ -126,22 +118,6 @@ def main():
 
             except Exception as e:
                 st.error(f"❌ An error occurred: {str(e)}")
-                st.info(
-                    "Possible causes:\n"
-                    "- Invalid or expired **GROQ_API_KEY**\n"
-                    "- Groq API rate limit reached\n"
-                    "- No internet connection"
-                )
 
-    elif ask_button and not question:
+    elif ask_button and not question.strip():
         st.warning("⚠️ Please enter a question first.")
-
-    # Footer
-    st.divider()
-    st.caption(
-        "Built with LangChain 0.3 • Groq API • HuggingFace • ChromaDB • Streamlit"
-    )
-
-
-if __name__ == "__main__":
-    main()
