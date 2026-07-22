@@ -66,14 +66,10 @@ def main():
         
         # 1. كارت تفاصيل النماذج والمحرك
         with st.container(border=True):
-            st.subheader("🤖 AI Core", divider="blue")
-            st.markdown(f"**Provider:** `Groq` ⚡")
-            st.markdown(f"**LLM Model:**\n`{DEFAULT_MODEL}`")
-            
+            st.subheader("AI Core", divider="blue")
+            st.markdown(f"**Provider:** `Groq` ⚡")            
             st.subheader("🧠 Vector Engine", divider="green")
             st.markdown(f"**Embeddings:** `HuggingFace`")
-            st.markdown(f"**Embed Model:**\n`{EMBEDDING_MODEL}`")
-            st.markdown(f"**Vector Database:** `ChromaDB` 💾")
 
         # 2. دليل قاعدة المعرفة (قابلة للطي لتقليل الزحام)
         with st.expander("📖 Knowledge Base Guide", expanded=False):
