@@ -59,29 +59,37 @@ def main():
         "mentorship-style answer drawn directly from your uploaded reference books."
     )
 
-    # Sidebar — system info
+   # Sidebar — System Info & Setup Guide
     with st.sidebar:
-        st.header("⚙️ System Info")
-        st.markdown(f"**🤖 LLM Provider:** Groq")
-        st.markdown(f"**🧠 LLM Model:** `{DEFAULT_MODEL}`")
-        st.markdown(f"**🤗 Embeddings:** HuggingFace (local)")
-        st.markdown(f"**📦 Embed Model:** `{EMBEDDING_MODEL}`")
-        st.markdown(f"**💾 Vector Store:** ChromaDB (persistent)")
-        st.divider()
-        st.markdown("**📖 Knowledge Base**")
-        st.caption(
-            "Add PDFs to `./books/` and run `python ingest.py` "
-            "to update the knowledge base."
-        )
-        st.divider()
-        st.markdown(
-            "🔑 Set your key:\n"
-            "- **Local:** `.env` → `GROQ_API_KEY`\n"
-            "- **Cloud:** Streamlit Secrets → `GROQ_API_KEY`"
-        )
+        st.title("⚙️ System Architecture")
+        st.caption("Data Analysis RAG Engine Status")
+        
+        # 1. كارت تفاصيل النماذج والمحرك
+        with st.container(border=True):
+            st.subheader("🤖 AI Core", divider="blue")
+            st.markdown(f"**Provider:** `Groq` ⚡")
+            st.markdown(f"**LLM Model:**\n`{DEFAULT_MODEL}`")
+            
+            st.subheader("🧠 Vector Engine", divider="green")
+            st.markdown(f"**Embeddings:** `HuggingFace`")
+            st.markdown(f"**Embed Model:**\n`{EMBEDDING_MODEL}`")
+            st.markdown(f"**Vector Database:** `ChromaDB` 💾")
 
-    st.divider()
+        # 2. دليل قاعدة المعرفة (قابلة للطي لتقليل الزحام)
+        with st.expander("📖 Knowledge Base Guide", expanded=False):
+            st.markdown(
+                "To add or update reference books:\n"
+                "1. Add PDFs into `./books/`\n"
+                "2. Run the ingestion command:"
+            )
+            st.code("python ingest.py", language="bash")
 
+        # 3. إعدادات المفتاح
+        with st.expander("🔑 API Key Setup", expanded=False):
+            st.markdown("**Local Development (`.env`):**")
+            st.code("GROQ_API_KEY=gsk_your_key_here", language="env")
+            st.markdown("**Streamlit Cloud (Secrets):**")
+            st.code('GROQ_API_KEY = "gsk_your_key_here"', language="toml")
     # Load RAG chain (cached — runs only once per session)
     chain = load_cached_rag_chain()
 
