@@ -16,46 +16,78 @@ st.set_page_config(
 
 # 🎨 2. تطبيق التصميم (خلفية فاتحة، بوكس كبير، أزرق، خطوط واضحة)
 st.markdown("""
+   st.markdown("""
     <style>
+        /* 1. تعريف الألوان للثيم الفاتح (Light Mode) بشكل افتراضي */
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --input-bg: #f8fafc;
+            --text-color: #0f172a;
+            --border-color: #e2e8f0;
+            --primary-blue: #0d6efd;
+            --primary-blue-hover: #0b5ed7;
+            --shadow-color: rgba(13, 110, 253, 0.08);
+        }
 
-        /* العنوان الرئيسي بأزرق مميز */
+        /* 2. تعديل المتغيرات تلقائياً عند تحويل النظام إلى الثيم الداكن (Dark Mode) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0e1117;
+                --card-bg: #1e293b;
+                --input-bg: #0f172a;
+                --text-color: #f8fafc;
+                --border-color: #334155;
+                --primary-blue: #3b82f6;
+                --primary-blue-hover: #2563eb;
+                --shadow-color: rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        /* 3. تطبيق الألوان الديناميكية على عناصر الصفحة */
+        .stApp {
+            background-color: var(--bg-color) !important;
+        }
+
+        /* العنوان الرئيسي */
         h1 {
-            color: #0d6efd !important;
+            color: var(--primary-blue) !important;
             font-weight: 800 !important;
         }
 
-        /* تصميم كارت الإدخال كبير وبارز */
+        /* كارت الإدخال (الكبير والبارز) */
         div[data-testid="stForm"] {
-            background-color: #ffffff !important;
+            background-color: var(--card-bg) !important;
             padding: 30px !important;
             border-radius: 16px !important;
-            border: 2px solid #e2e8f0 !important;
-            box-shadow: 0px 10px 25px rgba(13, 110, 253, 0.08) !important;
+            border: 2px solid var(--border-color) !important;
+            box-shadow: 0px 10px 25px var(--shadow-color) !important;
         }
 
-        /* تكبير بوكس الإدخال والخط الداخلي */
+        /* بوكس الكتابة والخط الداخلي */
         div[data-baseweb="input"] input {
             font-size: 1.2rem !important;
             padding: 14px 18px !important;
-            background-color: #f8fafc !important;
-            color: #0f172a !important;
-            border: 2px solid #0d6efd !important;
+            background-color: var(--input-bg) !important;
+            color: var(--text-color) !important;
+            border: 2px solid var(--primary-blue) !important;
             border-radius: 10px !important;
         }
 
-        /* زر السؤال أزرق كبير وواضح */
+        /* زر السؤال الأزرق الكبير */
         div[data-testid="stForm"] button {
-            background-color: #0d6efd !important;
+            background-color: var(--primary-blue) !important;
             color: #ffffff !important;
             font-size: 1.25rem !important;
             font-weight: bold !important;
             padding: 14px !important;
             border-radius: 10px !important;
             border: none !important;
+            transition: background-color 0.2s ease !important;
         }
 
         div[data-testid="stForm"] button:hover {
-            background-color: #0b5ed7 !important;
+            background-color: var(--primary-blue-hover) !important;
         }
     </style>
 """, unsafe_allow_html=True)
