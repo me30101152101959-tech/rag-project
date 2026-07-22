@@ -1,10 +1,10 @@
 """
 rag_core.py — Shared Core Module for Data Analysis RAG
 Centralizes environment verification, LLM initialization (Groq API),
-embeddings initialization, and RAG chain construction using modern LangChain LCEL.
+embeddings initialization, and modern LCEL RAG chain construction.
 
-LangChain 0.3.0+ native replacement:
-  create_retrieval_chain + create_stuff_documents_chain (LCEL-native).
+Pure LCEL implementation:
+  No dependency on legacy `langchain.chains` modules.
 
 Chain I/O contract:
   Input:  chain.invoke({"input": question_string})
@@ -21,9 +21,9 @@ from huggingface_hub import snapshot_download
 from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough, RunnableParallel
+from langchain_core.output_parsers import StrOutputParser
 
 
 # ─────────────────────────────────────────────
@@ -41,8 +41,6 @@ HF_REPO_ID = "mostafaeltaweel/data-analysis-chromadb"
 
 # ─────────────────────────────────────────────
 # SYSTEM PROMPT
-# Note: LCEL create_stuff_documents_chain requires the variable
-# for the user question to be named {input} and retrieved chunks {context}.
 # ─────────────────────────────────────────────
 
 SYSTEM_PROMPT_TEMPLATE = """\
@@ -89,9 +87,6 @@ def verify_environment(exit_on_fail: bool = True) -> str:
     """
     Load .env and verify GROQ_API_KEY is present and valid.
     Checks Streamlit Secrets as fallback for Streamlit Cloud deployment.
-    Returns the API key string on success.
-    Calls sys.exit(1) on failure if exit_on_fail=True (CLI),
-    or raises RuntimeError if exit_on_fail=False (server/app usage).
     """
     load_dotenv()
     api_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -122,9 +117,7 @@ def verify_environment(exit_on_fail: bool = True) -> str:
 
 
 def verify_chroma_exists(exit_on_fail: bool = True) -> None:
-    """Confirm the ChromaDB directory exists before loading.
-    If missing, automatically downloads it from Hugging Face Datasets.
-    """
+    """Confirm the ChromaDB directory exists; download from Hugging Face if missing."""
     if not os.path.exists(CHROMA_DIR):
         print(f"🌐 ChromaDB not found at '{CHROMA_DIR}'. Downloading from Hugging Face ({HF_REPO_ID})...")
         try:
@@ -147,15 +140,11 @@ def verify_chroma_exists(exit_on_fail: bool = True) -> None:
 
 
 # ─────────────────────────────────────────────
-# EMBEDDINGS — FREE LOCAL HUGGINGFACE MODEL
+# EMBEDDINGS
 # ─────────────────────────────────────────────
 
 def get_embeddings() -> HuggingFaceEmbeddings:
-    """
-    Return a HuggingFaceEmbeddings instance using all-MiniLM-L6-v2.
-    Model is downloaded once and cached locally by sentence-transformers.
-    Runs entirely on CPU — no GPU or API key required.
-    """
+    """Return HuggingFaceEmbeddings instance using all-MiniLM-L6-v2."""
     return HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
         model_kwargs={"device": "cpu"},
@@ -168,10 +157,7 @@ def get_embeddings() -> HuggingFaceEmbeddings:
 # ─────────────────────────────────────────────
 
 def get_llm(api_key: str, model: str = DEFAULT_MODEL) -> ChatOpenAI:
-    """
-    Return a ChatOpenAI instance configured for Groq API.
-    Groq is OpenAI-API-compatible — we override base_url and use GROQ_API_KEY.
-    """
+    """Return ChatOpenAI instance configured for Groq API."""
     return ChatOpenAI(
         model=model,
         api_key=api_key,
@@ -186,7 +172,7 @@ def get_llm(api_key: str, model: str = DEFAULT_MODEL) -> ChatOpenAI:
 # ─────────────────────────────────────────────
 
 def get_vectorstore() -> Chroma:
-    """Load the persisted ChromaDB vectorstore with HuggingFace embeddings."""
+    """Load the persisted ChromaDB vectorstore."""
     verify_chroma_exists(exit_on_fail=False)
     embeddings = get_embeddings()
     return Chroma(
@@ -197,27 +183,17 @@ def get_vectorstore() -> Chroma:
 
 
 # ─────────────────────────────────────────────
-# RAG CHAIN BUILDER  (LCEL — LangChain 0.3.x+)
+# RAG CHAIN BUILDER (PURE NATIVE LCEL)
 # ─────────────────────────────────────────────
 
 def build_rag_chain(api_key: str, model: str = DEFAULT_MODEL):
     """
-    Build and return a LangChain LCEL retrieval chain using:
-      - ChromaDB vectorstore (HuggingFace embeddings)
-      - Groq LLM API (via ChatOpenAI client)
-      - 5-step teaching protocol system prompt
-
-    Caller contract:
+    Build and return a modern LCEL RAG chain.
+    
+    Guarantees compatibility with the existing calling convention:
       result = chain.invoke({"input": question})
       answer = result["answer"]
-      docs   = result["context"]   # list of retrieved Document objects
-
-    Args:
-        api_key: Groq API key string.
-        model:   Groq model identifier (default: llama-3.3-70b-versatile).
-
-    Returns:
-        Configured LCEL chain (create_retrieval_chain).
+      docs   = result["context"]
     """
     vectorstore = get_vectorstore()
 
@@ -227,15 +203,31 @@ def build_rag_chain(api_key: str, model: str = DEFAULT_MODEL):
     )
 
     llm = get_llm(api_key=api_key, model=model)
-
-    # LCEL prompt — variables must be {context} and {input}
     prompt = ChatPromptTemplate.from_template(SYSTEM_PROMPT_TEMPLATE)
 
-    # Stage 1: stuff retrieved docs into the prompt
-    document_chain = create_stuff_documents_chain(llm, prompt)
+    # Helper function to combine document contents for the prompt
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
 
-    # Stage 2: wire the retriever to the document chain
-    chain = create_retrieval_chain(retriever, document_chain)
+    # 1. Fetch relevant documents based on the input question
+    retrieval_step = RunnableParallel({
+        "context": (lambda x: x["input"]) | retriever,
+        "input": lambda x: x["input"]
+    })
+
+    # 2. Complete LCEL pipeline mapping inputs and context to the desired dict output structure
+    chain = retrieval_step | RunnableParallel({
+        "answer": (
+            RunnablePassthrough.assign(
+                context=lambda x: format_docs(x["context"])
+            )
+            | prompt
+            | llm
+            | StrOutputParser()
+        ),
+        "context": lambda x: x["context"],
+        "input": lambda x: x["input"]
+    })
 
     return chain
 
@@ -245,16 +237,7 @@ def build_rag_chain(api_key: str, model: str = DEFAULT_MODEL):
 # ─────────────────────────────────────────────
 
 def format_sources(source_documents: list, icon: bool = True) -> list[str]:
-    """
-    Extract unique, human-readable source citations from retrieved documents.
-
-    Args:
-        source_documents: List of LangChain Document objects (from result["context"]).
-        icon:             Prepend a book emoji for CLI/UI display.
-
-    Returns:
-        Deduplicated list of citation strings like "📖 book.pdf — Page 42".
-    """
+    """Extract unique citation strings from retrieved documents."""
     sources = []
     seen = set()
     prefix = "📖 " if icon else ""
